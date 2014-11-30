@@ -1,0 +1,37 @@
+{
+  "name": "ratestate",
+  "version": "0.0.1",
+  "description": "A ratelimiter that can transmit states of different objects while avoiding transmitting the same state twice, and adhering to a global speed limit.",
+  "keywords": [
+    "ratelimiter"
+  ],
+  "author": "Kevin van Zonneveld <kevin@vanzonneveld.net>",
+  "engines": {
+    "node": ">= 0.10.0"
+  },
+  "dependencies": {
+    "debug": "^1.0.4",
+    "object-hash": "^0.3.0",
+    "source-map-support": "^0.2.8",
+    "underscore": "^1.7.0"
+  },
+  "devDependencies": {
+    "should": "4.0.4",
+    "coffee-script": "1.7.1",
+    "chai": "1.9.1",
+    "mocha": "1.20.1",
+    "coffeelint": "1.5.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/kvz/ratestate.git"
+  },
+  "directories": {
+    "lib": "./lib"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "license": "MIT",
+  "main": "./index"
+}
