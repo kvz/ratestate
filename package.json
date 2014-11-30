@@ -1,6 +1,6 @@
 {
   "name": "ratestate",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A ratelimiter that can transmit states of different objects while avoiding transmitting the same state twice, and adhering to a global speed limit.",
   "keywords": [
     "ratelimiter"
