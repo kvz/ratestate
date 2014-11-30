@@ -65,7 +65,7 @@ describe "Ratestate", ->
         expect(calls[1]).to.equal 1
         expect(colored[1]).to.equal "purple"
 
-        expect(calls[2]).to.equal 4
+        expect(calls[2]).to.be.within 3, 5
         expect(colored[2]).to.equal "yellow"
         done()
       , stopAfter
