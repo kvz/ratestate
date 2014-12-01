@@ -44,7 +44,7 @@ Ratestate is similar to Underscore's [debounce](http://underscorejs.org/#debounc
 
  - Continously update 20 different `.json` files on S3, but your server/network only allows a few updates per second.
  - Flush the current status of visitors to disk for caching, but throttle the total throughput as to not wear out your harddisk or cause high load.
- - Capture dominant colors from camera and push those onto Philips HUE lamps, but the combined throughput is capped by a rate-limiter on the central Bridge.
+ - Capture dominant colors from a video feed at 60 frames per second, and push those colors to Philips HUE lamps, but the combined throughput to them is capped by a rate-limiter on the central Bridge, allowing you to at most only pass through 30 colors per second total.
 
 You can call `setState` as much as you'd like, and Ratestate will
 
