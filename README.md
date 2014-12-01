@@ -23,10 +23,10 @@ Here's a little coffeescript example
 
 ```coffeescript
 ratestate = new Ratestate
-interval: 30
-worker  : (id, state, cb) ->
-  # Transmit the state to id
-  cb null
+  interval: 30
+  worker  : (id, state, cb) ->
+    # Transmit the state to id
+    cb null
 
 ratestate.setState 1, color: "purple"
 ratestate.setState 1, color: "green"
