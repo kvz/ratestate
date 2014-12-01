@@ -11,7 +11,6 @@ A ratelimiter that can transmit states of different objects while avoiding trans
 
 Use case: having many updates for Philips Hue intelligent lightbulbs (e.g. based on realtime color detection of camera input), memoizing the latest desired state internally, but only submitting max 30 updates / sec, to avoid hitting the global rate limiter as imposed by the Hue Bridge.
 
-
 ## Install
 
 ```bash
@@ -20,14 +19,46 @@ npm install --save ratestate
 
 ## Use
 
+Here's a little coffeescript example
 
 ```coffeescript
+ratestate = new Ratestate
+interval: 30
+worker  : (id, state, cb) ->
+  # Transmit the state to id
+  cb null
+
+ratestate.setState 1, color: "purple"
+ratestate.setState 1, color: "green"
+ratestate.setState 1, color: "yellow"
+ratestate.setState 1, color: "yellow"
+ratestate.setState 1, color: "yellow"
+ratestate.setState 1, color: "green"
 ```
+
+In this example, entity `1` will reach `"green"` and probably wont be set to any other intermediate state (color in this case), as we're setting the state much faster than our configured `interval`.
+
+## Behavior and Limitations
+
+Ratestate is similar to Underscore's [debounce](http://underscorejs.org/#debounce), but it runs indefintely and assumes you want to update the state of different entities, but for all entities you are globally speed limited. For instance you might want to
+
+ - Continously update 20 different `.json` files on S3, but your server/network only allows a few updates per second.
+ - Flush the current status of visitors to disk for caching, but throttle the total throughput as to not wear out your harddisk or cause high load.
+ - Capture dominant colors from camera and push those onto Philips HUE lamps, but the combined throughput is capped by a rate-limiter on the central Bridge.
+
+You can call `setState` as much as you'd like, and Ratestate will
+
+ - Only transmit at a maximum speed every configured `interval`ms
+ - Take care of an even spread between the entities
+ - Not execute `worker` if the state has not changed
+ - Consider the last pushed state for an entity leading, it will **not** attempt to transmit **every** state if more states are set than can be transmitted
+
+By default, ratestate detects if a state has changed by comparing hashes of set state objects. If that's too heavy for your usecase (your states are huge - your frequency high), you can supply your own function that will be executed on the `state` object (it should just return a unique string for that entity's state, e.g. `return state.color` or `return state.bytes_received`).
 
 ## Todo
 
- - [ ] Init
-
+ - [ ] Allow to use your own hashing function (currently only full hashing is implemented)
+ - [ ] Implement a gracefull `shutdown`, that at least sends the final state for each entity one time, before returning its callback
 
 ### Compile
 
@@ -50,14 +81,14 @@ To single out a test use `make test GREP=30x`
 
 Releasing a new version to npmjs.org can be done via `make release-patch` (or minor / major, depending on the [semantic versioning](http://semver.org/) impact of your changes). This:
 
- - updates the `package.json`
- - saves a release commit with the updated version in Git
- - pushes to GitHub
- - publishes to npmjs.org
+ - Updates the `package.json`
+ - Saves a release commit with the updated version in Git
+ - Pushes to GitHub
+ - Publishes to npmjs.org
 
 ## Authors
 
-* [Kevin van Zonneveld](https://twitter.com/kvz)
+ - [Kevin van Zonneveld](https://twitter.com/kvz)
 
 ## License
 
