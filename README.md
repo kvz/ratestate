@@ -28,12 +28,14 @@ ratestate = new Ratestate
     # Transmit the state to id
     cb null
 
+ratestate.start()
 ratestate.setState 1, color: "purple"
 ratestate.setState 1, color: "green"
 ratestate.setState 1, color: "yellow"
 ratestate.setState 1, color: "yellow"
 ratestate.setState 1, color: "yellow"
 ratestate.setState 1, color: "green"
+ratestate.stop()
 ```
 
 In this example, entity `1` will reach `"green"` and probably wont be set to any other intermediate state (color in this case), as we're setting the state much faster than our configured `interval`.
