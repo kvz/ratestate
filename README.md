@@ -55,12 +55,59 @@ You can call `setState` as much as you'd like, and Ratestate will
  - Not execute `worker` if the state has not changed
  - Consider the last pushed state for an entity leading, it will **not** attempt to transmit **every** state if more states are set than can be transmitted
 
-By default, ratestate detects if a state has changed by comparing hashes of set state objects. If that's too heavy for your usecase (your states are huge - your frequency high), you can supply your own function that will be executed on the `state` object (it should just return a unique string for that entity's state, e.g. `return state.color` or `return state.bytes_received`).
+## Custom hashing
+
+By default, ratestate detects if a state has changed by comparing hashes of set state objects it won't consider executing the `worker` on states that have not changed.
+
+If the built-in serializing & hashing is too heavy for your usecase (your states are huge - your frequency high), you can supply your own function that will be executed on the `state` object to determine its uniqueness. In the following example we'll supply our own `hashFunc` to determine if the state is a candidate for passing to the `worker`.
+
+```coffeescript
+megabyte = 1024 * 1024 * 1024
+status   =
+  id            : "abcdefghijklmnopqrstuvw"
+  status        : "UPLOADING"
+  bytes_received: 2073741824
+  client_agent  : "Mozilla/5.0 (Windows NT 6.0; rv:34.0) Gecko/20100101 Firefox/34.0"
+  client_ip     : "189.3.31.70"
+  uploads       : [
+    name: "tesla.jpg"
+  ]
+  results: [
+    original:
+      name: "tesla.jpg"
+  ,
+    resized:
+      name: "tesla-100px.jpg"
+  ]
+
+ratestate = new Ratestate
+  hashFunc: (state) ->
+    return [
+      state.status
+      state.bytes_received - (state.bytes_received % megabyte)
+      state.uploads.length
+      state.results.length
+    ].join "-"
+
+ratestate.start()
+ratestate.setState "abcdefghijklmnopqrstuvw", status
+# And many more setStates throughout the lifetime of you program
+ratestate.stop()
+```
+
+This would internally be hashed to as `UPLOADING-653908770816-1-2`, if we detect a change in our system and blindly call `setState`, this won't execute `worker` if
+
+ - The `status` has not changed, AND
+ - We have less than a new megate of `bytes_received`, AND
+ - The amount of `uploads` is still the same, AND
+ - The amount of `results` is still the same
+
+Cool and a lot more efficient than serializing and hashing an entire object.
 
 ## Todo
 
- - [ ] Allow to use your own hashing function (currently only full hashing is implemented)
  - [ ] Implement a gracefull `shutdown`, that at least sends the final state for each entity one time, before returning its callback
+ - [x] Allow to use your own hashing function (currently only full hashing is implemented)
 
 ### Compile
 

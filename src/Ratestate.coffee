@@ -4,24 +4,25 @@ hash  = require "object-hash"
 debug = require("debug")("Ratestate:Ratestate")
 
 class Ratestate
-  _desiredStates: {}
-  _currentHashes: {}
-  _desiredHashes: {}
-  _objectIds    : []
-  _pointer      : 0
-  _config       :
-    interval: 30
-    worker  : (objectId, state, cb) ->
-      console.log "Processing #{objectId}"
-      cb null
-
   constructor: (config) ->
+    @_desiredStates = {}
+    @_currentHashes = {}
+    @_desiredHashes = {}
+    @_objectIds     = []
+    @_pointer       = 0
+    @_config        =
+      interval: 30
+      hashFunc: hash
+      worker  : (objectId, state, cb) ->
+        console.log "Processing #{objectId}"
+        cb null
+
     if config?
       for key, val of config
         @_config[key] = val
 
   setState: (objectId, desiredState) ->
-    desiredHash = hash(desiredState)
+    desiredHash = @_config.hashFunc desiredState
     if @_currentHashes[objectId]? && @_currentHashes[objectId] == desiredHash
       return
 
@@ -33,11 +34,8 @@ class Ratestate
     # debug util.inspect
     #   states      : @_desiredStates
     #   hashes      : @_desiredHashes
-    #   objectId          : objectId
+    #   objectId    : objectId
     #   desiredState: desiredState
-
-  getState: (objectId) ->
-    return @_desiredStates[objectId]
 
   run: () ->
     len = @_objectIds.length - 1
