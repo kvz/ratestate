@@ -107,9 +107,9 @@ Cool and a lot more efficient than serializing and hashing an entire object.
 ## Todo
 
  - [ ] Implement a lock per entity to avoid concurrent writes. But: how can we then guarantee the last write wins? Delaying it? That might get messy.
- - [ ] Cleanup `@_desiredStates` bookkeeping after releasing payload.
  - [ ] Implement a gracefull `shutdown`, that at least sends the final state for each entity one time, before returning its callback
  - [ ] Implement a forcefull `start`, so that intervals are ignored if we don't have a previous state on the entity yet.
+ - [x] Cleanup `@_desiredStates` bookkeeping after worker executed on it without error
  - [x] Allow to use your own hashing function (currently only full hashing is implemented)
 
 ### Compile

@@ -51,6 +51,8 @@ class Ratestate
         @_config.worker entityId, desiredState, (err) =>
           if !err
             @_currentHashes[entityId] = @_desiredHashes[entityId]
+            # Clean up for efficiency, this could be big
+            delete @_desiredStates[entityId]
 
         break
 
