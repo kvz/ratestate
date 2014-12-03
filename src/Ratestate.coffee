@@ -27,7 +27,7 @@ class Ratestate
       return
 
     if entityId not in @_entityIds
-      @_entityIds.push(entityId)
+      @_entityIds.push entityId
 
     @_desiredHashes[entityId] = desiredHash
     @_desiredStates[entityId] = desiredState
