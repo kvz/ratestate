@@ -37,7 +37,7 @@ class Ratestate
     #   entityId    : entityId
     #   desiredState: desiredState
 
-  run: () ->
+  run: ->
     len = @_entityIds.length - 1
     for i in [0..len] when i >= @_pointer
       entityId     = @_entityIds[i]
@@ -54,10 +54,10 @@ class Ratestate
 
         break
 
-  start: () ->
+  start: ->
     @timer = setInterval @run.bind(this), @_config.interval
 
-  stop: () ->
+  stop: ->
     clearInterval @timer
 
 module.exports = Ratestate
