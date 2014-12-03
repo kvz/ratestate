@@ -43,14 +43,14 @@ class Ratestate
       objectId     = @_objectIds[i]
       desiredState = @_desiredStates[objectId]
 
+      @_pointer++
+      if @_pointer > len
+        @_pointer = 0
+
       if @_currentHashes[objectId] != @_desiredHashes[objectId]
         @_config.worker objectId, desiredState, (err) =>
           if !err
             @_currentHashes[objectId] = @_desiredHashes[objectId]
-
-        @_pointer++
-        if @_pointer > len
-          @_pointer = 0
 
         break
 
