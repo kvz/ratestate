@@ -7,7 +7,7 @@
 
 # ratestate
 
-A ratelimiter that can transmit states of different objects while avoiding transmitting the same state twice, and adhering to a global speed limit.
+A ratelimiter that can transmit states of different entities while avoiding transmitting the same state twice, and adhering to a global speed limit.
 
 Use case: having many updates for Philips Hue intelligent lightbulbs (e.g. based on realtime color detection of camera input), memoizing the latest desired state internally, but only submitting max 30 updates / sec, to avoid hitting the global rate limiter as imposed by the Hue Bridge.
 
@@ -57,7 +57,7 @@ You can call `setState` as much as you'd like, and Ratestate will
 
 ## Custom hashing
 
-By default, ratestate detects if a state has changed by comparing hashes of set state objects it won't consider executing the `worker` on states that have not changed.
+By default, ratestate detects if a state has changed by comparing hashes of set `state` objects it won't consider executing the `worker` on states that have not changed.
 
 If the built-in serializing & hashing is too heavy for your usecase (your states are huge - your frequency high), you can supply your own function that will be executed on the `state` object to determine its uniqueness. In the following example we'll supply our own `hashFunc` to determine if the state is a candidate for passing to the `worker`.
 
