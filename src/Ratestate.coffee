@@ -5,13 +5,14 @@ debug = require("debug")("Ratestate:Ratestate")
 
 class Ratestate
   constructor: (config) ->
-    @_desiredStates    = {}
-    @_currentHashes    = {}
-    @_desiredHashes    = {}
-    @_entityIds        = []
-    @_workerInProgress = []
-    @_pointer          = 0
-    @_config           =
+    @_desiredStates        = {}
+    @_currentHashes        = {}
+    @_desiredHashes        = {}
+    @_entityStateCallbacks = {}
+    @_entityIds            = []
+    @_workerInProgress     = []
+    @_pointer              = 0
+    @_config               =
       interval: 30
       hashFunc: hash
       worker  : (entityId, state, cb) ->
@@ -22,13 +23,18 @@ class Ratestate
       for key, val of config
         @_config[key] = val
 
-  setState: (entityId, desiredState) ->
+  setState: (entityId, desiredState, cb) ->
     desiredHash = @_config.hashFunc desiredState
     if @_currentHashes[entityId]? && @_currentHashes[entityId] == desiredHash
       return
 
     if entityId not in @_entityIds
+      # Discovered a new entity, let everybody know
       @_entityIds.push entityId
+      @_entityStateCallbacks[entityId] = {}
+
+    if cb?
+      @_entityStateCallbacks[entityId][desiredHash] = cb
 
     @_desiredHashes[entityId] = desiredHash
     @_desiredStates[entityId] = desiredState
@@ -43,6 +49,8 @@ class Ratestate
     for i in [0..len] when i >= @_pointer
       entityId     = @_entityIds[i]
       desiredState = @_desiredStates[entityId]
+      desiredHash  = @_desiredHashes[entityId]
+
 
       @_pointer++
       if @_pointer > len
@@ -61,6 +69,11 @@ class Ratestate
         @_workerInProgress[entityId] = true
         @_config.worker entityId, desiredState, (err) =>
           @_workerInProgress[entityId] = false
+
+          # setState can optionally carry a last cb argument,
+          # which is saved and executed here
+          if @_entityStateCallbacks[entityId][desiredHash]?
+            @_entityStateCallbacks[entityId][desiredHash] err
 
           if !err
             @_currentHashes[entityId] = @_desiredHashes[entityId]
