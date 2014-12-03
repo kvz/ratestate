@@ -5,12 +5,13 @@ debug = require("debug")("Ratestate:Ratestate")
 
 class Ratestate
   constructor: (config) ->
-    @_desiredStates = {}
-    @_currentHashes = {}
-    @_desiredHashes = {}
-    @_entityIds     = []
-    @_pointer       = 0
-    @_config        =
+    @_desiredStates    = {}
+    @_currentHashes    = {}
+    @_desiredHashes    = {}
+    @_entityIds        = []
+    @_workerInProgress = []
+    @_pointer          = 0
+    @_config           =
       interval: 30
       hashFunc: hash
       worker  : (entityId, state, cb) ->
@@ -48,7 +49,19 @@ class Ratestate
         @_pointer = 0
 
       if @_currentHashes[entityId] != @_desiredHashes[entityId]
+        if @_workerInProgress[entityId] == true
+          # To avoid concurrently working the same entity, we'll
+          # discard calling worker now.
+          #
+          # However we do not touch the desired state, so that will
+          # either be overwritten by a later (better) state, still
+          # be executed later on.
+          continue
+
+        @_workerInProgress[entityId] = true
         @_config.worker entityId, desiredState, (err) =>
+          @_workerInProgress[entityId] = false
+
           if !err
             @_currentHashes[entityId] = @_desiredHashes[entityId]
             # Clean up for efficiency, this could be big

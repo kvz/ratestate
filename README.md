@@ -54,6 +54,7 @@ You can call `setState` as much as you'd like, and Ratestate will
  - Take care of an even spread between the entities
  - Not execute `worker` if the state has not changed
  - Consider the last pushed state for an entity leading, it will **not** attempt to transmit **every** state if more states are set than can be transmitted
+ - Avoid concurrently working on the same entity (last write wins)
 
 ## Custom hashing
 
