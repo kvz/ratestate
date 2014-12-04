@@ -22,6 +22,19 @@ describe "Ratestate", ->
 
       done()
 
+  describe "finalState", ->
+    it "should clean up entity", (done) ->
+      ratestate = new Ratestate
+
+      ratestate.start()
+      ratestate.setState 1, color: "red"
+      ratestate.setState 1, color: "green"
+      ratestate.finalState 1, color: "purple", (err) ->
+        debug ratestate._entityIds
+        expect(ratestate._entityIds.length).to.equal 0
+        ratestate.stop()
+        done()
+
     it "should allow custom hashing", (done) ->
       megabyte = 1024 * 1024 * 1024
       status   =
@@ -55,12 +68,62 @@ describe "Ratestate", ->
           ].join "-"
 
       ratestate.setState 1, status
-      expect(ratestate._desiredHashes[1]).to.deep.equal "UPLOADING-653908770816-1-2"
+      expect(ratestate._desiredHashes[1]).to.equal "UPLOADING-653908770816-1-2"
 
       done()
 
   describe "start", ->
-    it "should start interval", (done) ->
+    it "should not allow multiple concurrent workers on a single entity", (done) ->
+      calls         = {}
+      colors        = {}
+      workerRunning =
+        1: false
+        2: false
+
+      ratestate = new Ratestate
+        # A fast interval
+        interval: 1
+        # A slow worker
+        worker: (id, state, cb) ->
+          expect(workerRunning[id]).to.equal false
+          workerRunning[id] = true
+
+          calls[id] ?= 0
+          calls[id]++
+          colors[id] = state.color
+
+          setTimeout ->
+            workerRunning[id] = false
+            cb null
+          , 250
+        drained: ->
+          debug "Drained"
+          ratestate.stop()
+          expect(calls[1]).to.equal 1
+          expect(calls[2]).to.equal 1
+          expect(colors[1]).to.equal "yellow"
+          expect(colors[2]).to.equal "yellow"
+          done()
+
+      ratestate.start()
+
+      setTimeout ->
+        ratestate.setState 1, color: "purple"
+        ratestate.setState 2, color: "purple"
+      , 10
+      setTimeout ->
+        ratestate.setState 1, color: "green"
+        ratestate.setState 2, color: "green"
+      , 20
+      setTimeout ->
+        ratestate.setState 1, color: "yellow"
+        ratestate.setState 2, color: "yellow"
+      , 30
+
+
+
+
+    it "should execute multiple calls, and make sure last write wins", (done) ->
       stopAfter   = 1000 # 1 sec
       errorMargin = .20  # Allow timing to be 20 % off
       calls       = {}
@@ -79,7 +142,6 @@ describe "Ratestate", ->
 
       ratestate = new Ratestate config
       ratestate.setState 1, color: "purple"
-
       ratestate.setState 2, color: "green"
 
       setState = (id, state, delay) ->

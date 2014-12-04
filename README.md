@@ -34,11 +34,11 @@ ratestate.setState 1, color: "green"
 ratestate.setState 1, color: "yellow"
 ratestate.setState 1, color: "yellow"
 ratestate.setState 1, color: "yellow"
-ratestate.setState 1, color: "green"
+ratestate.finalState 1, color: "green"
 ratestate.stop()
 ```
 
-In this example, entity `1` will reach `"green"` and probably wont be set to any other intermediate state (color in this case), as we're setting the state much faster than our configured `interval`.
+In this example, entity `1` will reach `"green"` and probably won't be set to any other intermediate state (color in this case), as we're setting the state much faster than our configured `interval` could keep up with.
 
 ## Behavior and Limitations
 
@@ -109,14 +109,19 @@ Cool and a lot more efficient than serializing and hashing an entire object.
 
 Optionally you can add a last `callback` argument to `setState`. This can be useful when setting the final state of an entity. Not recommended otherwise as there's no guarantee your `callback` will be fired for anything other than the final state.
 
+## finalState
+
+`finalState` is much like `setState` (it's called under the hood), but requires a callback, which is called after the `worker` successfully finished on it. Additionally, all data of the involved entity are removed from ratestate.
+
 ## Todo
 
- - [ ] Test concurrency
  - [ ] Test `entityStateCallback`
- - [ ] Track errors, abort after x
- - [ ] Implement a lock per entity to avoid concurrent writes. But: how can we then guarantee the last write wins? Delaying it? That might get messy.
- - [ ] Implement a gracefull `shutdown`, that at least sends the final state for each entity one time, before returning its callback
+ - [ ] Track errors, abort after x(?)
  - [ ] Implement a forcefull `start`, so that intervals are ignored if we don't have a previous state on the entity yet.
+ - [ ] Fix concurrency test (last write does not win)
+ - [x] Test concurrency
+ - [x] Implement a lock per entity to avoid concurrent writes
+ - [x] Add `finalState`
  - [x] Optional callback for `setState`. Useful for setting the last state of an entity. Otherwise: not recommended as there's no guarantee your `callback` will be fired for anything other than the last write.
  - [x] Cleanup `@_desiredStates` bookkeeping after worker executed on it without error
  - [x] Allow to use your own hashing function (currently only full hashing is implemented)
