@@ -22,19 +22,6 @@ describe "Ratestate", ->
 
       done()
 
-  describe "finalState", ->
-    it "should clean up entity", (done) ->
-      ratestate = new Ratestate
-
-      ratestate.start()
-      ratestate.setState 1, color: "red"
-      ratestate.setState 1, color: "green"
-      ratestate.finalState 1, color: "purple", (err) ->
-        # debug ratestate._entityIds
-        expect(ratestate._entityIds.length).to.equal 0
-        ratestate.stop()
-        done()
-
     it "should allow custom hashing", (done) ->
       megabyte = 1024 * 1024 * 1024
       status   =
@@ -71,6 +58,20 @@ describe "Ratestate", ->
       expect(ratestate._desiredHashes[1]).to.equal "UPLOADING-653908770816-1-2"
 
       done()
+
+  describe "finalState", ->
+    it "should clean up entity", (done) ->
+      ratestate = new Ratestate
+
+      ratestate.start()
+      ratestate.setState 1, color: "red"
+      ratestate.setState 1, color: "green"
+      ratestate.finalState 1, color: "purple", (err) ->
+        # debug ratestate._entityIds
+        expect(ratestate._entityIds.length).to.equal 0
+        ratestate.stop()
+        done()
+
 
   describe "start", ->
     it "should not allow multiple concurrent workers on a single entity", (done) ->
