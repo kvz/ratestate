@@ -115,10 +115,10 @@ Optionally you can add a last `callback` argument to `setState`. This can be use
 
 ## Todo
 
- - [ ] Test `entityStateCallback`
  - [ ] Track errors, abort after x(?)
  - [ ] Implement a forcefull `start`, so that intervals are ignored if we don't have a previous state on the entity yet.
- - [ ] Fix concurrency test (last write does not win)
+ - [x] Test `entityStateCallback`
+ - [x] Fix concurrency test (last write does not win)
  - [x] Test concurrency
  - [x] Implement a lock per entity to avoid concurrent writes
  - [x] Add `finalState`
