@@ -101,9 +101,7 @@ class Ratestate
           @_workerInProgress[entityId] = false
 
           if !err
-            @_currentHashes[entityId] = @_desiredHashes[entityId]
-            # Clean up for efficiency, this could be big
-            delete @_desiredStates[entityId]
+            @_currentHashes[entityId] = desiredHash
 
           # setState can optionally carry a last cb argument,
           # which is saved upon call, and executed here
@@ -112,7 +110,6 @@ class Ratestate
 
         return
 
-      debug "checked #{checked}. len #{len}"
       if checked == (len+1) && len >= 0
         if @_config.drained?
           @_config.drained()

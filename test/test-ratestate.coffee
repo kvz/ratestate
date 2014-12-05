@@ -110,17 +110,15 @@ describe "Ratestate", ->
       setTimeout ->
         ratestate.setState 1, color: "purple"
         ratestate.setState 2, color: "purple"
-      , 10
+      , 100
       setTimeout ->
         ratestate.setState 1, color: "green"
         ratestate.setState 2, color: "green"
-      , 20
+      , 200
       setTimeout ->
         ratestate.setState 1, color: "yellow"
         ratestate.setState 2, color: "yellow"
-      , 30
-
-
+      , 300
 
 
     it "should execute multiple calls, and make sure last write wins", (done) ->
