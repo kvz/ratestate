@@ -99,8 +99,8 @@ describe "Ratestate", ->
         drained: ->
           debug "Drained"
           ratestate.stop()
-          expect(calls[1]).to.equal 1
-          expect(calls[2]).to.equal 1
+          expect(calls[1]).to.equal 2
+          expect(calls[2]).to.equal 2
           expect(colors[1]).to.equal "yellow"
           expect(colors[2]).to.equal "yellow"
           done()
