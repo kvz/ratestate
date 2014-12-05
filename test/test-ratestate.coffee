@@ -30,7 +30,7 @@ describe "Ratestate", ->
       ratestate.setState 1, color: "red"
       ratestate.setState 1, color: "green"
       ratestate.finalState 1, color: "purple", (err) ->
-        debug ratestate._entityIds
+        # debug ratestate._entityIds
         expect(ratestate._entityIds.length).to.equal 0
         ratestate.stop()
         done()
@@ -97,7 +97,7 @@ describe "Ratestate", ->
             cb null
           , 250
         drained: ->
-          debug "Drained"
+          # debug "Drained"
           ratestate.stop()
           expect(calls[1]).to.equal 2
           expect(calls[2]).to.equal 2
@@ -132,7 +132,7 @@ describe "Ratestate", ->
           colored[id] = state.color
           calls[id]  ?= 0
           calls[id]++
-          debug "Setting lamp #{id} to #{state.color}"
+          # debug "Setting lamp #{id} to #{state.color}"
           cb null
 
       expectedCalls = Math.floor(stopAfter / config.interval)
@@ -144,7 +144,7 @@ describe "Ratestate", ->
 
       setState = (id, state, delay) ->
         setTimeout ->
-          debug "setState #{state.color} in #{delay}ms"
+          # debug "setState #{state.color} in #{delay}ms"
           ratestate.setState 2, state
         , delay
 

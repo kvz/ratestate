@@ -16,7 +16,7 @@ class Ratestate
       interval: 30
       hashFunc: hash
       worker  : (entityId, state, cb) ->
-        debug "Processing #{entityId}"
+        # debug "Processing #{entityId}"
         cb null
       drained: ->
         # debug "Drained"
@@ -73,9 +73,8 @@ class Ratestate
     #   desiredState: desiredState
 
   run: ->
-    len     = @_entityIds.length - 1
     checked = 0
-    for i in [0..len] when i >= @_pointer
+    for i in [@_pointer..(@_entityIds.length-1)]
       entityId     = @_entityIds[i]
       desiredState = @_desiredStates[entityId]
       desiredHash  = @_desiredHashes[entityId]
@@ -83,7 +82,7 @@ class Ratestate
 
       checked++
       @_pointer++
-      if @_pointer > len
+      if @_pointer >= @_entityIds.length
         @_pointer = 0
 
       if @_currentHashes[entityId] != @_desiredHashes[entityId]
@@ -110,7 +109,7 @@ class Ratestate
 
         return
 
-      if checked == (len+1) && len >= 0
+      if checked == @_entityIds.length && @_entityIds.length > 0
         if @_config.drained?
           @_config.drained()
 
