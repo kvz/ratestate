@@ -168,7 +168,6 @@ describe "Ratestate", ->
       stopAfter   = 1000 # 1 sec
       cbCalls     = []
       cbCallOrder = []
-      calls       = {}
       colored     = {}
       config    =
         interval: 30
@@ -241,4 +240,45 @@ describe "Ratestate", ->
           expect(cbCallOrder).to.eql expectedOrder
 
           done()
+      , stopAfter
+
+    it "should provide the state that was last written to all executed callbacks", (done) ->
+      stopAfter     = 1000 # 1 sec
+      statesWritten = []
+      colored       = {}
+      interval      = 30
+      config        =
+        interval: interval
+        worker  : (id, state, cb) ->
+          colored[id] = state.color
+          cb null
+
+      ratestate = new Ratestate config
+
+      ratestate.setState 1, color: "purple_0", (err, stateWritten) ->
+        statesWritten.push stateWritten
+
+      ratestate.setState 1, color: "purple_1", (err, stateWritten) ->
+        statesWritten.push stateWritten
+
+      setTimeout ->
+        ratestate.setState 1, color: "purple_2", (err, stateWritten) ->
+          statesWritten.push stateWritten
+      , interval * 3
+
+      ratestate.start()
+
+      setTimeout ->
+        ratestate.stop()
+
+        expect(colored[1]).to.equal "purple_2"
+
+        expectedStates = [
+          {color: "purple_1"}
+          {color: "purple_1"}
+          {color: "purple_2"}
+        ]
+        expect(statesWritten).to.eql expectedStates
+
+        done()
       , stopAfter

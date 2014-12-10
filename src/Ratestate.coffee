@@ -110,7 +110,7 @@ class Ratestate
           # execute all callbacks that have been queued up
           if cbs?
             for cb in cbs
-              cb err
+              cb err, desiredState
 
         return
 
