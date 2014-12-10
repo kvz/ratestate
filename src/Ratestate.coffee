@@ -59,10 +59,10 @@ class Ratestate
     if entityId not in @_entityIds
       # Discovered a new entity, let everybody know
       @_entityIds.push entityId
-      @_entityStateCallbacks[entityId] = {}
+      @_entityStateCallbacks[entityId] = []
 
     if cb?
-      @_entityStateCallbacks[entityId][desiredHash] = cb
+      @_entityStateCallbacks[entityId].push cb
 
     @_desiredHashes[entityId] = desiredHash
     @_desiredStates[entityId] = desiredState
@@ -78,7 +78,10 @@ class Ratestate
       entityId     = @_entityIds[i]
       desiredState = @_desiredStates[entityId]
       desiredHash  = @_desiredHashes[entityId]
-      cb           = @_entityStateCallbacks[entityId]?[desiredHash]
+      cbs          = @_entityStateCallbacks[entityId]
+
+      # reset callback queue
+      @_entityStateCallbacks[entityId] = []
 
       checked++
       @_pointer++
@@ -103,9 +106,11 @@ class Ratestate
             @_currentHashes[entityId] = desiredHash
 
           # setState can optionally carry a last cb argument,
-          # which is saved upon call, and executed here
-          if cb?
-            cb err
+          # which is saved upon call, and executed here.
+          # execute all callbacks that have been queued up
+          if cbs?
+            for cb in cbs
+              cb err, desiredState
 
         return
 

@@ -164,3 +164,121 @@ describe "Ratestate", ->
         done()
       , stopAfter
 
+    it "should execute provided callbacks of all setState calls in the right order, even if some writes are skipped", (done) ->
+      stopAfter   = 1000 # 1 sec
+      cbCalls     = []
+      cbCallOrder = []
+      colored     = {}
+      config    =
+        interval: 30
+        worker  : (id, state, cb) ->
+          colored[id] = state.color
+          cb null
+
+      ratestate = new Ratestate config
+
+      ratestate.setState 1, color: "purple_0", ->
+        cbCalls[0] ?= 0
+        cbCalls[0]++
+
+        cbCallOrder.push "purple_0"
+
+      ratestate.setState 2, color: "green", ->
+        cbCalls[1] ?= 0
+        cbCalls[1]++
+
+      ratestate.setState 3, color: "yellow", ->
+        cbCalls[2] ?= 0
+        cbCalls[2]++
+
+      ratestate.setState 1, color: "purple_1", ->
+        cbCalls[0] ?= 0
+        cbCalls[0]++
+
+        cbCallOrder.push "purple_1"
+
+      ratestate.setState 1, color: "purple_2", ->
+        cbCalls[0] ?= 0
+        cbCalls[0]++
+
+        cbCallOrder.push "purple_2"
+
+      ratestate.setState 1, color: "purple_3", ->
+        cbCalls[0] ?= 0
+        cbCalls[0]++
+
+        cbCallOrder.push "purple_3"
+
+      ratestate.start()
+
+      setTimeout ->
+        # a setState call when the previous batch has been executed
+        # should also have its callback called
+        ratestate.setState 1, color: "purple_4", ->
+          cbCalls[0] ?= 0
+          cbCalls[0]++
+
+          cbCallOrder.push "purple_4"
+
+          ratestate.stop()
+
+          expect(colored[1]).to.equal "purple_4"
+          expect(colored[2]).to.equal "green"
+          expect(colored[3]).to.equal "yellow"
+
+          expect(cbCalls[0]).to.equal 5
+          expect(cbCalls[1]).to.equal 1
+          expect(cbCalls[2]).to.equal 1
+
+          expectedOrder = [
+            "purple_0"
+            "purple_1"
+            "purple_2"
+            "purple_3"
+            "purple_4"
+          ]
+          expect(cbCallOrder).to.eql expectedOrder
+
+          done()
+      , stopAfter
+
+    it "should provide the state that was last written to all executed callbacks", (done) ->
+      stopAfter     = 1000 # 1 sec
+      statesWritten = []
+      colored       = {}
+      interval      = 30
+      config        =
+        interval: interval
+        worker  : (id, state, cb) ->
+          colored[id] = state.color
+          cb null
+
+      ratestate = new Ratestate config
+
+      ratestate.setState 1, color: "purple_0", (err, stateWritten) ->
+        statesWritten.push stateWritten
+
+      ratestate.setState 1, color: "purple_1", (err, stateWritten) ->
+        statesWritten.push stateWritten
+
+      setTimeout ->
+        ratestate.setState 1, color: "purple_2", (err, stateWritten) ->
+          statesWritten.push stateWritten
+      , interval * 3
+
+      ratestate.start()
+
+      setTimeout ->
+        ratestate.stop()
+
+        expect(colored[1]).to.equal "purple_2"
+
+        expectedStates = [
+          {color: "purple_1"}
+          {color: "purple_1"}
+          {color: "purple_2"}
+        ]
+        expect(statesWritten).to.eql expectedStates
+
+        done()
+      , stopAfter
