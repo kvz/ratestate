@@ -80,9 +80,6 @@ class Ratestate
       desiredHash  = @_desiredHashes[entityId]
       cbs          = @_entityStateCallbacks[entityId]
 
-      # reset callback queue
-      @_entityStateCallbacks[entityId] = []
-
       checked++
       @_pointer++
       if @_pointer >= @_entityIds.length
@@ -97,6 +94,10 @@ class Ratestate
           # either be overwritten by a later (better) state, still
           # be executed later on.
           continue
+
+        # reset callback queue when we start a new worker
+        # so that for subsequent calls there can be a new queue
+        @_entityStateCallbacks[entityId] = []
 
         @_workerInProgress[entityId] = true
         @_config.worker entityId, desiredState, (err) =>
@@ -113,6 +114,15 @@ class Ratestate
               cb err, desiredState
 
         return
+
+      # if there were calls to setState with the same desired hash during
+      # the execution of the worker, we will have a queue of callbacks, which
+      # we will also need to clear/call back when the worker is finished.
+      if cbs? && !@_workerInProgress[entityId]
+        @_entityStateCallbacks[entityId] = []
+
+        for cb in cbs
+          cb null, desiredState
 
       if checked == @_entityIds.length && @_entityIds.length > 0
         if @_config.drained?

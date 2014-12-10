@@ -165,47 +165,67 @@ describe "Ratestate", ->
       , stopAfter
 
     it "should execute provided callbacks of all setState calls in the right order, even if some writes are skipped", (done) ->
-      stopAfter   = 1000 # 1 sec
-      cbCalls     = []
-      cbCallOrder = []
-      colored     = {}
+      stopAfter          = 8000 # 1 sec
+      cbCalls            = []
+      cbCallOrder        = []
+      cbCallOrderTimeout = []
+      colored            = {}
+      interval           = 30
       config    =
-        interval: 30
+        interval: interval
         worker  : (id, state, cb) ->
-          colored[id] = state.color
-          cb null
+          setTimeout ->
+            colored[id] = state.color
+            cb null
+          , interval * 20
 
       ratestate = new Ratestate config
 
-      ratestate.setState 1, color: "purple_0", ->
+      ratestate.setState 0, color: "purple_0", ->
         cbCalls[0] ?= 0
         cbCalls[0]++
 
-        cbCallOrder.push "purple_0"
+        cbCallOrderTimeout.push "purple_0"
 
-      ratestate.setState 2, color: "green", ->
+      # even if we have a running worker (worker takes 600ms to execute, we call
+      # this after 90ms) should the callback be enqueued and executed
+      setTimeout ->
+        ratestate.setState 0, color: "purple_0", ->
+          cbCalls[0] ?= 0
+          cbCalls[0]++
+
+          cbCallOrderTimeout.push "purple_0_2"
+      , interval * 3
+
+      ratestate.setState 1, color: "purple_1", ->
         cbCalls[1] ?= 0
         cbCalls[1]++
 
-      ratestate.setState 3, color: "yellow", ->
+        cbCallOrder.push "purple_1"
+
+      ratestate.setState 2, color: "green", ->
         cbCalls[2] ?= 0
         cbCalls[2]++
 
-      ratestate.setState 1, color: "purple_1", ->
-        cbCalls[0] ?= 0
-        cbCalls[0]++
-
-        cbCallOrder.push "purple_1"
+      ratestate.setState 3, color: "yellow", ->
+        cbCalls[3] ?= 0
+        cbCalls[3]++
 
       ratestate.setState 1, color: "purple_2", ->
-        cbCalls[0] ?= 0
-        cbCalls[0]++
+        cbCalls[1] ?= 0
+        cbCalls[1]++
 
         cbCallOrder.push "purple_2"
 
       ratestate.setState 1, color: "purple_3", ->
-        cbCalls[0] ?= 0
-        cbCalls[0]++
+        cbCalls[1] ?= 0
+        cbCalls[1]++
+
+        cbCallOrder.push "purple_3"
+
+      ratestate.setState 1, color: "purple_3", ->
+        cbCalls[1] ?= 0
+        cbCalls[1]++
 
         cbCallOrder.push "purple_3"
 
@@ -215,29 +235,45 @@ describe "Ratestate", ->
         # a setState call when the previous batch has been executed
         # should also have its callback called
         ratestate.setState 1, color: "purple_4", ->
-          cbCalls[0] ?= 0
-          cbCalls[0]++
+          cbCalls[1] ?= 0
+          cbCalls[1]++
+
+          cbCallOrder.push "purple_4"
+
+        # even saving the same state again should call the callback
+        ratestate.setState 1, color: "purple_4", ->
+          cbCalls[1] ?= 0
+          cbCalls[1]++
 
           cbCallOrder.push "purple_4"
 
           ratestate.stop()
 
+          expect(colored[0]).to.equal "purple_0"
           expect(colored[1]).to.equal "purple_4"
           expect(colored[2]).to.equal "green"
           expect(colored[3]).to.equal "yellow"
 
-          expect(cbCalls[0]).to.equal 5
-          expect(cbCalls[1]).to.equal 1
+          expect(cbCalls[0]).to.equal 2
+          expect(cbCalls[1]).to.equal 6
           expect(cbCalls[2]).to.equal 1
+          expect(cbCalls[3]).to.equal 1
 
           expectedOrder = [
-            "purple_0"
             "purple_1"
             "purple_2"
             "purple_3"
+            "purple_3"
+            "purple_4"
             "purple_4"
           ]
           expect(cbCallOrder).to.eql expectedOrder
+
+          expectedOrder = [
+            "purple_0"
+            "purple_0_2"
+          ]
+          expect(cbCallOrderTimeout).to.eql expectedOrder
 
           done()
       , stopAfter
