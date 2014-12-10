@@ -155,6 +155,7 @@ Releasing a new version to npmjs.org can be done via `make release-patch` (or mi
 ## Authors
 
  - [Kevin van Zonneveld](https://twitter.com/kvz)
+ - [Tim Koschuetzki](https://twitter.com/tim_kos)
 
 ## License
 
