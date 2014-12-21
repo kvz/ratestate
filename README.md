@@ -7,7 +7,7 @@
 
 # ratestate
 
-Ratestate is a ratelimiter that can transmit states of different entities while avoiding transmitting the same state twice, and adhering to a global speed limit.
+Ratestate is a ratelimiter in the form of a [Node.js module](http://npmjs.org/package/ratestate) that can transmit states of different entities while avoiding transmitting the same state twice, and adhering to a global speed limit.
 
 Let's say you purchased some intelligent lightbulbs and want to set new colors in near-realtime (e.g. based on color detection of camera input), however the central hub receiving the color commands has a rate limiter that only accepts 30 updates per second. Ratestate can help you spread & drip updates amongst the different lightbulbs, without forming queues (by forgetting about superseded colors).
 
@@ -65,7 +65,7 @@ If this built-in serializing & hashing is too heavy for your usecase (your state
 ```coffeescript
 megabyte = 1024 * 1024 * 1024
 status   =
-  id            : "abcdefghijklmnopqrstuvw"
+  id            : "foo-id"
   status        : "UPLOADING"
   bytes_received: 2073741824
   client_agent  : "Mozilla/5.0 (Windows NT 6.0; rv:34.0) Gecko/20100101 Firefox/34.0"
@@ -91,7 +91,7 @@ ratestate = new Ratestate
     ].join "-"
 
 ratestate.start()
-ratestate.setState "abcdefghijklmnopqrstuvw", status
+ratestate.setState "foo-id", status
 # And many more setStates throughout the lifetime of you program
 ratestate.stop()
 ```
