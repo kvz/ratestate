@@ -7,9 +7,9 @@
 
 # ratestate
 
-A ratelimiter that can transmit states of different entities while avoiding transmitting the same state twice, and adhering to a global speed limit.
+Ratestate is a ratelimiter that can transmit states of different entities while avoiding transmitting the same state twice, and adhering to a global speed limit.
 
-Use case: having many updates for Philips Hue intelligent lightbulbs (e.g. based on realtime color detection of camera input), memoizing the latest desired state internally, but only submitting max 30 updates / sec, to avoid hitting the global rate limiter as imposed by the Hue Bridge.
+Let's say you purchased some intelligent lightbulbs and want to set new colors in near-realtime (e.g. based on color detection of camera input), however the central hub receiving the color commands has a rate limiter that only accepts 30 updates per second. Ratestate can help you spread & drip updates amongst the different lightbulbs, without forming queues (by forgetting about superseded colors).
 
 ## Install
 
@@ -19,7 +19,7 @@ npm install --save ratestate
 
 ## Use
 
-Here's a little coffeescript example
+Here's a little CoffeeScript example
 
 ```coffeescript
 ratestate = new Ratestate
@@ -34,7 +34,7 @@ ratestate.setState 1, color: "green"
 ratestate.setState 1, color: "yellow"
 ratestate.setState 1, color: "yellow"
 ratestate.setState 1, color: "yellow"
-ratestate.finalState 1, color: "green"
+ratestate.setState 1, color: "green"
 ratestate.stop()
 ```
 
@@ -44,7 +44,7 @@ In this example, entity `1` will reach `"green"` and probably won't be set to an
 
 Ratestate is similar to Underscore's [debounce](http://underscorejs.org/#debounce), but it runs indefintely and assumes you want to update the state of different entities, but for all entities you are globally speed limited. For instance you might want to
 
- - Continously update 20 different `.json` files on S3, but your server/network only allows a few updates per second.
+ - Continously update 20 different `.json` files on S3, but your server/network only allows a few updates per second. The part of the program that sets the updates, should fire & forget, and not concern itself with environmental constraints like that.
  - Flush the current status of visitors to disk for caching, but throttle the total throughput as to not wear out your harddisk or cause high load.
  - Capture dominant colors from a video feed at 60 frames per second, and push those colors to Philips HUE lamps, but the combined throughput to them is capped by a rate-limiter on the central Bridge, allowing you to at most only pass through 30 colors per second total.
 
@@ -56,11 +56,11 @@ You can call `setState` as much as you'd like, and Ratestate will
  - Consider the last pushed state for an entity leading, it will **not** attempt to transmit **every** state if more states are set than can be transmitted
  - Avoid concurrently working on the same entity (last write wins)
 
-## Custom hashing
+## Hashing
 
-By default, ratestate detects if a state has changed by comparing hashes of set `state` objects it won't consider executing the `worker` on states that have not changed.
+By default, Ratestate detects if a state has changed by comparing hashes of set `state` objects it won't consider executing the `worker` on entity states that have not changed.
 
-If the built-in serializing & hashing is too heavy for your usecase (your states are huge - your frequency high), you can supply your own function that will be executed on the `state` object to determine its uniqueness. In the following example we'll supply our own `hashFunc` to determine if the state is a candidate for passing to the `worker`.
+If this built-in serializing & hashing is too heavy for your usecase (your states are huge - your frequency high), you can supply your own function that will be executed on the `state` object to determine its uniqueness. In the following example we'll supply our own `hashFunc` to determine if the state is a candidate for passing to the `worker`.
 
 ```coffeescript
 megabyte = 1024 * 1024 * 1024
@@ -96,18 +96,14 @@ ratestate.setState "abcdefghijklmnopqrstuvw", status
 ratestate.stop()
 ```
 
-This would internally be hashed to as `UPLOADING-653908770816-1-2`, if we detect a change in our system and blindly call `setState`, this won't execute `worker` if
+This would internally be 'hashed' as `UPLOADING-653908770816-1-2`, if we detect a change in our system and blindly call `setState` for our entity, this won't execute the `worker` on it if
 
  - The `status` has not changed, AND
- - We have less than a new megate of `bytes_received`, AND
+ - We have less than a new megabyte of `bytes_received`, AND
  - The amount of `uploads` is still the same, AND
  - The amount of `results` is still the same
 
-Cool and a lot more efficient than serializing and hashing an entire object.
-
-## setState callbacks
-
-Optionally you can add a last `callback` argument to `setState`. This can be useful when setting the final state of an entity. Not recommended otherwise as there's no guarantee your `callback` will be fired for anything other than the final state.
+That's a lot more efficient than serializing and hashing an entire object.
 
 ## finalState
 
@@ -116,7 +112,7 @@ Optionally you can add a last `callback` argument to `setState`. This can be use
 ## Todo
 
  - [ ] Track errors, abort after x(?)
- - [ ] Implement a forcefull `start`, so that intervals are ignored if we don't have a previous state on the entity yet.
+ - [ ] Implement a forceful `start`, so that intervals are ignored if we don't have a previous state on the entity yet.
  - [x] Test `entityStateCallback`
  - [x] Fix concurrency test (last write does not win)
  - [x] Test concurrency
@@ -133,19 +129,17 @@ This project is written in [CoffeeScript](http://coffeescript.org/), and the Jav
 
 ## Contribute
 
-I'd be happy to accept pull requests. If you plan on working on something big, please first give a shout!
-
+I'd be happy to [accept issues](https://github.com/kvz/ratestate) and pull requests. If you plan on working on something big, please first give a shout.
 
 ### Test
 
 Run tests via `make test`.
 
-To single out a test use `make test GREP=30x`
-
+To single out a test use `make test GREP=foobar`
 
 ### Release
 
-Releasing a new version to npmjs.org can be done via `make release-patch` (or minor / major, depending on the [semantic versioning](http://semver.org/) impact of your changes). This:
+Releasing a new version to https://www.npmjs.com/ can be done via `make release-patch` (or `minor` / `major`, depending on the [semantic versioning](http://semver.org/) impact of your changes). This:
 
  - Updates the `package.json`
  - Saves a release commit with the updated version in Git
@@ -159,7 +153,7 @@ Releasing a new version to npmjs.org can be done via `make release-patch` (or mi
 
 ## License
 
-[MIT Licensed](LICENSE).
+[MIT Licensed](https://github.com/kvz/ratestate/blob/master/LICENSE).
 
 ## Sponsor Development
 
