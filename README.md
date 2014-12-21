@@ -58,9 +58,9 @@ You can call `setState` as much as you'd like, and Ratestate will
 
 ## Hashing
 
-By default, Ratestate detects if a state has changed by comparing hashes of set `state` objects it won't consider executing the `worker` on entity states that have not changed.
+By default, Ratestate detects if a state has changed by comparing hashes of set `state` objects and it won't consider executing the `worker` on entity states that have not changed.
 
-If this built-in serializing & hashing is too heavy for your usecase (your states are huge - your frequency high), you can supply your own function that will be executed on the `state` object to determine its uniqueness. In the following example we'll supply our own `hashFunc` to determine if the state is a candidate for passing to the `worker`.
+If this built-in serializing & hashing is too heavy for your usecase (your states are huge - your interval low), you can supply your own function that will be executed on the `state` object to determine its uniqueness. In the following example we'll supply our own `hashFunc` to determine if the state is a candidate for passing to the `worker`.
 
 ```coffeescript
 megabyte = 1024 * 1024 * 1024
@@ -146,9 +146,10 @@ Releasing a new version to https://www.npmjs.com/ can be done via `make release-
  - Pushes to GitHub
  - Publishes to npmjs.org
 
-## Authors
+## Contributors
 
- - [Kevin van Zonneveld](https://twitter.com/kvz)
+This project received invaluable contributions from:
+
  - [Tim Koschuetzki](https://twitter.com/tim_kos)
 
 ## License
