@@ -46,7 +46,7 @@ Ratestate is similar to Underscore's [debounce](http://underscorejs.org/#debounc
 
  - Continously update 20 different `.json` files on S3, but your server/network only allows a few updates per second. The part of the program that sets the updates, should fire & forget, and not concern itself with environmental constraints like that.
  - Flush the current status of visitors to disk for caching, but throttle the total throughput as to not wear out your harddisk or cause high load.
- - Capture dominant colors from a video feed at 60 frames per second, and push those colors to Philips HUE lamps, but the combined throughput to them is capped by a rate-limiter on the central Bridge, allowing you to at most only pass through 30 colors per second total.
+ - Capture dominant colors from a video feed at 60 frames per second, and push those colors to Philips HUE lamps, but the combined throughput to them is capped by a rate-limiter on the central Bridge, allowing you to only pass through 30 colors per second total.
 
 You can call `setState` as much as you'd like, and Ratestate will
 
@@ -69,7 +69,7 @@ status   =
   status        : "UPLOADING"
   bytes_received: 2073741824
   client_agent  : "Mozilla/5.0 (Windows NT 6.0; rv:34.0) Gecko/20100101 Firefox/34.0"
-  client_ip     : "189.3.31.70"
+  client_ip     : "123.123.123.123"
   uploads       : [
     name: "tesla.jpg"
   ]
@@ -92,18 +92,17 @@ ratestate = new Ratestate
 
 ratestate.start()
 ratestate.setState "foo-id", status
-# And many more setStates throughout the lifetime of you program
 ratestate.stop()
 ```
 
-This would internally be 'hashed' as `UPLOADING-653908770816-1-2`, if we detect a change in our system and blindly call `setState` for our entity, this won't execute the `worker` on it if
+This would internally be 'hashed' as `UPLOADING-653908770816-1-2`, if we detect a change in our system and blindly call `setState` for our entity, this only executes the `worker` on it if
 
- - The `status` has not changed, AND
- - We have less than a new megabyte of `bytes_received`, AND
- - The amount of `uploads` is still the same, AND
- - The amount of `results` is still the same
+ - The `status` has changed, OR
+ - We have more than a new megabytes worth of `bytes_received`, OR
+ - The amount of `uploads` changed, OR
+ - The amount of `results` changed
 
-That's a lot more efficient than serializing and hashing an entire object.
+As that covers all the interesting changes for us, it's more efficient than serializing and hashing an entire object.
 
 ## finalState
 
@@ -150,7 +149,7 @@ Releasing a new version to https://www.npmjs.com/ can be done via `make release-
 
 This project received invaluable contributions from:
 
- - [Tim Koschuetzki](https://twitter.com/tim_kos)
+ - [Tim Koschützki](https://twitter.com/tim_kos)
 
 ## License
 
