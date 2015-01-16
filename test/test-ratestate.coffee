@@ -45,8 +45,16 @@ describe "Ratestate", ->
       ratestate.setState 1, status
       expect(ratestate._desiredHashes[1]).to.deep.equal "d8ef52d2fbdb618db0919f8046cb237ee40bb3aa"
 
+      workerHasIpTestCalls = 0
       ratestate = new Ratestate
+        worker: (entityId, state, cb) ->
+          expect(state.client_ip).to.equal "189.3.31.70"
+          workerHasIpTestCalls++
+          cb()
+
         hashFunc: (state) ->
+          delete state.client_ip
+
           return [
             state.status
             state.bytes_received - (state.bytes_received % megabyte)
@@ -54,10 +62,13 @@ describe "Ratestate", ->
             state.results.length
           ].join "-"
 
-      ratestate.setState 1, status
-      expect(ratestate._desiredHashes[1]).to.equal "UPLOADING-653908770816-1-2"
+      ratestate.start()
+      ratestate.setState 1, status, ->
+        expect(ratestate._desiredHashes[1]).to.equal "UPLOADING-653908770816-1-2"
+        expect(workerHasIpTestCalls).to.equal 1
 
-      done()
+        ratestate.stop()
+        done()
 
   describe "finalState", ->
     it "should clean up entity", (done) ->

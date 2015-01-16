@@ -49,7 +49,8 @@ class Ratestate
     delete @_workerInProgress[entityId]
 
   setState: (entityId, desiredState, cb) ->
-    desiredHash = @_config.hashFunc desiredState
+    desiredStateCopy = JSON.parse JSON.stringify(desiredState)
+    desiredHash = @_config.hashFunc desiredStateCopy
 
     if @_currentHashes[entityId]? && @_currentHashes[entityId] == desiredHash
       if cb?
