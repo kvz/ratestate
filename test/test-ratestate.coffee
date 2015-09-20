@@ -5,6 +5,25 @@ fs          = require "fs"
 expect      = require("chai").expect
 fixture_dir = "#{__dirname}/fixtures"
 Ratestate   = require "../src/Ratestate"
+megabyte    = 1024 * 1024 * 1024
+
+fixtureStatus =
+  id            : 1
+  status        : "UPLOADING"
+  bytes_received: 654935654935
+  client_agent  : "Mozilla/5.0 (Windows NT 6.0; rv:34.0) Gecko/20100101 Firefox/34.0"
+  client_ip     : "189.3.31.70"
+  uploads       : [
+    name: "tesla.jpg"
+  ]
+  results       : [
+    ":original":
+      name: "tesla.jpg"
+  ,
+    resized:
+      name: "tesla-100px.jpg"
+  ]
+
 
 describe "Ratestate", ->
   @timeout 10000 # <-- This is the Mocha timeout, allowing tests to run longer
@@ -22,39 +41,15 @@ describe "Ratestate", ->
 
       done()
 
+    it "should support default hashing", (done) ->
+      ratestate = new Ratestate
+      ratestate.setState 1, fixtureStatus
+      expect(ratestate._desiredHashes[1]).to.deep.equal "14f63618f63a1b3866cfb35575cc7133926dace4"
+      done()
+
     it "should allow custom hashing", (done) ->
-      megabyte = 1024 * 1024 * 1024
-      status   =
-        id            : 1
-        status        : "UPLOADING"
-        bytes_received: 654935654935
-        client_agent  : "Mozilla/5.0 (Windows NT 6.0; rv:34.0) Gecko/20100101 Firefox/34.0"
-        client_ip     : "189.3.31.70"
-        uploads       : [
-          name: "tesla.jpg"
-        ]
-        results       : [
-          ":original":
-            name: "tesla.jpg"
-        ,
-          resized:
-            name: "tesla-100px.jpg"
-        ]
-
       ratestate = new Ratestate
-      ratestate.setState 1, status
-      expect(ratestate._desiredHashes[1]).to.deep.equal "d8ef52d2fbdb618db0919f8046cb237ee40bb3aa"
-
-      workerHasIpTestCalls = 0
-      ratestate = new Ratestate
-        worker: (entityId, state, cb) ->
-          expect(state.client_ip).to.equal "189.3.31.70"
-          workerHasIpTestCalls++
-          cb()
-
         hashFunc: (state) ->
-          delete state.client_ip
-
           return [
             state.status
             state.bytes_received - (state.bytes_received % megabyte)
@@ -62,13 +57,9 @@ describe "Ratestate", ->
             state.results.length
           ].join "-"
 
-      ratestate.start()
-      ratestate.setState 1, status, ->
-        expect(ratestate._desiredHashes[1]).to.equal "UPLOADING-653908770816-1-2"
-        expect(workerHasIpTestCalls).to.equal 1
-
-        ratestate.stop()
-        done()
+      ratestate.setState 1, fixtureStatus
+      expect(ratestate._desiredHashes[1]).to.equal "UPLOADING-653908770816-1-2"
+      done()
 
   describe "finalState", ->
     it "should clean up entity", (done) ->
