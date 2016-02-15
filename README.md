@@ -5,8 +5,6 @@
 [![Development Dependency Status](https://david-dm.org/kvz/ratestate/dev-status.png?theme=shields.io)](https://david-dm.org/kvz/ratestate#info=devDependencies)
 <!-- /badges -->
 
-# ratestate
-
 Ratestate is a ratelimiter in the form of a [Node.js module](http://npmjs.org/package/ratestate) that can transmit states of different entities while avoiding transmitting the same state twice, and adhering to a global speed limit.
 
 Let's say you purchased some intelligent lightbulbs and want to set new colors in near-realtime (e.g. based on color detection of camera input), however the central hub receiving the color commands has a rate limiter that only accepts 30 updates per second. Ratestate can help you spread & drip updates amongst the different lightbulbs, without forming queues (by forgetting about superseded colors).
